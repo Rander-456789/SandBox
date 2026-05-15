@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { createGuestUser } from "@/lib/api";
+import { createGuest } from "@/lib/api";
 import { useSessionStore } from "@/store/sessionStore";
 
 export function GuestContinueButton() {
@@ -12,15 +12,22 @@ export function GuestContinueButton() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // C1: ref-guard against double-click during navigation
+  const submittingRef = useRef(false);
+
   async function handleClick() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     setError(null);
     setLoading(true);
     try {
-      const data = await createGuestUser();
+      const data = await createGuest();
       setUserId(data.user_id);
       router.push("/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
+      submittingRef.current = false;
     } finally {
       setLoading(false);
     }

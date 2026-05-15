@@ -13,4 +13,11 @@ router.include_router(interactions_router, prefix="/interactions", tags=["intera
 
 @router.get("/health")
 def health_check() -> dict[str, str]:
+    # N5: also verify DB connectivity
+    from app.db.session import SessionLocal
+    try:
+        with SessionLocal() as session:
+            session.execute(session.bind.dialect.do_ping(None))
+    except Exception:
+        return {"status": "degraded", "db": "unreachable"}
     return {"status": "ok"}

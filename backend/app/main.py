@@ -12,13 +12,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
+# M6: Apply API prefix to the router (contract: /api/auth/guest etc.)
+app.include_router(api_router, prefix=settings.API_PREFIX)

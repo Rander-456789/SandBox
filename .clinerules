@@ -1,0 +1,97 @@
+# RecSys Music Sandbox — правила проекта
+
+## Архитектура (текущая)
+
+```
+guest auth → генерация плейлиста → player shell → interaction logging
+```
+
+### Backend (FastAPI, порт 8000)
+```
+POST /api/auth/guest          — создание гостевого пользователя
+POST /api/playlist/generate   — генерация плейлиста
+POST /api/interactions/       — логирование действий
+GET  /api/health              — health check
+```
+
+**Слои backend:**
+- **API routes** — тонкие контроллеры, только валидация и вызов нижних слоёв
+- **Recommender layer** — изолирован; возвращает **только track_ids**
+- **API layer** — сам достаёт metadata треков по id (playlist.py:31)
+- **Models** — User, Track, Interaction (InteractionType: like/dislike/skip/listen)
+- **DB** — SQLite через SQLAlchemy, session per request (SessionLocal)
+
+**Главный контракт системы:**
+```
+(user_id, model_name) → [track_id, ...]          # рекомендация
+(user_id, track_id, model_used, interaction_type) # логирование
+```
+
+### Frontend (Next.js + Tailwind, порт 3000)
+- `/` — лендинг с кнопкой «Continue as Guest»
+- `/dashboard` — сессия: ModelPanel + Generate Playlist + PlayerShell
+- **State** — Zustand с persist в localStorage (sessionStore)
+- **API client** — [`lib/api.ts`](frontend/lib/api.ts) — createGuestUser, generatePlaylist
+- **PlayerShell** — заглушка с UI-кнопками (dislike/prev/play/next/like), без реального плеера
+
+### Recommender Registry
+```python
+# backend/app/recommenders/registry.py
+RECOMMENDER_REGISTRY = {
+    "random": RandomRecommender,
+}
+```
+Фабрика: `Callable[[Session], BaseRecommender]`. Каждый новый recommender добавляется в registry.
+
+## Технологический стек
+
+| Слой | Технологии |
+|------|-----------|
+| Backend | FastAPI, SQLAlchemy, SQLite, Pydantic v2, Pydantic-settings |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, Zustand |
+| DB | SQLite (файл `recsys_music_sandbox.db`) |
+| Данные | Last.fm subset (CSV → seed_tracks.py) |
+
+## Ограничения MVP
+
+- Только **одна** recommendation model — `random`
+- Каталог треков — **subset** Last.fm датасета
+- Backend **не работает с аудио** — только metadata (artist_name, track_name)
+- Воспроизведение планируется через **YouTube IFrame API**
+- ML pipeline **отсутствует** — только stateless random recommender
+- **Guest-only** аутентификация — без регистрации/логина
+- Frontend player — **UI-заглушка**, playback не реализован
+
+## How to work on this project
+
+### Принципы разработки
+
+1. **No overengineering.** Решения должны быть минимально достаточными для текущего этапа. Не строить enterprise-архитектуру под гипотетические будущие требования.
+
+2. **Маленькие итерации.** Один PR = одна фича. Не смешивать несвязанные изменения.
+
+3. **Не ломать существующий API.** Контракты эндпоинтов (`/auth/guest`, `/playlist/generate`, `/interactions/`) — стабильны. Менять только с обратной совместимостью.
+
+4. **Frontend минималистичный, dark music-style.** Tailwind-токены определены в [`globals.css`](frontend/app/globals.css). Не придумывать новые цвета без необходимости. Стиль — тёмный, воздушный, с акцентом `#9d4edd`.
+
+5. **Backend architecture future-proof for ML.** Рекомендательный слой изолирован через `BaseRecommender` → `RECOMMENDER_REGISTRY`. При добавлении новой модели — только новый класс и запись в registry. Всё остальное не трогаем.
+
+6. **Recommender возвращает только track_ids.** Никакой metadata в рекомендательном слое. API layer сам резолвит треки по id.
+
+### Code style
+
+- Backend: сессии БД через `SessionLocal()`, всегда в `with`-блоке
+- API routes — тонкие, без бизнес-логики
+- Frontend: клиентские компоненты с `"use client"`, API-вызовы через [`lib/api.ts`](frontend/lib/api.ts)
+- Состояние сессии — только через Zustand `useSessionStore`
+- Без лишних абстракций пока нет явной потребности
+
+## Roadmap (следующие этапы)
+
+1. **Frontend player state** — Zustand-стор для текущего трека, очереди, статуса воспроизведения
+2. **YouTube IFrame integration** — встраивание YouTube плеера, поиск трека по `artist_name + track_name`
+3. **Playback events** — обработка onReady, onStateChange, отправка listen/skip в `/interactions/`
+4. **Auto-next track** — автоматическое переключение на следующий трек при окончании
+5. **Recommendation improvements** — второй recommender (например, popularity-based или content-based)
+6. **Model switching** — UI для выбора модели рекомендаций в ModelPanel
+7. **Analytics** — дашборд или отчёт по собранным interactions (распределение лайков/дизлайков по моделям)

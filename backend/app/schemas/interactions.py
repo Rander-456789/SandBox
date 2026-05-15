@@ -15,3 +15,4 @@ class InteractionLogRequest(BaseModel):
 
 class InteractionLogResponse(BaseModel):
     status: Literal["ok"] = "ok"
+    interaction_id: uuid.UUID | None = None  # N4: for debugging
