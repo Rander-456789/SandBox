@@ -10,27 +10,29 @@ type PlayerState = {
   isGenerating: boolean;
   error: string | null;
 
-  // ── Playback runtime (ready for YouTube integration) ────────
+  // ── Playback runtime ────────────────────────────────────────
   isPlaying: boolean;
-  isLoading: boolean;      // track runtime loading (YouTube buffering)
-  hasStarted: boolean;     // true после первого play — для listen event trigger
-  listenThresholdReached: boolean; // YT-BLOCK-2: true когда 30s/50% прослушано
+  isLoading: boolean;        // track runtime loading (YouTube buffering)
+  hasStarted: boolean;       // true после первого user Play — разблокирует autoplay
+  isPlaylistFinished: boolean; // true когда последний трек доиграл до конца
 
   // ── Playlist actions ────────────────────────────────────────
   setPlaylist: (tracks: PlaylistTrack[]) => void;
   setGenerating: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  /** YT-BLOCK-1: autoPlay default true — YouTube auto-continues */
+  /** autoPlay default false — used explicitly. Auto-next via ENDED passes true. */
   nextTrack: (autoPlay?: boolean) => void;
-  /** YT-BLOCK-1: autoPlay default true */
+  /** autoPlay default false — used explicitly. */
   prevTrack: (autoPlay?: boolean) => void;
   clearPlaylist: () => void;
 
   // ── Playback actions ────────────────────────────────────────
   setPlaying: (playing: boolean) => void;
   setTrackLoading: (loading: boolean) => void;
+  /** Разблокирует autoplay после первого user gesture (Play button click). */
   markTrackStarted: () => void;
-  markListenThresholdReached: () => void; // YT-BLOCK-2
+  /** Помечает плейлист как завершённый (последний трек доиграл). */
+  markPlaylistFinished: () => void;
 };
 
 export const usePlayerStore = create<PlayerState>()((set, get) => ({
@@ -41,7 +43,7 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
   isPlaying: false,
   isLoading: false,
   hasStarted: false,
-  listenThresholdReached: false,
+  isPlaylistFinished: false,
 
   // ── Playlist actions ────────────────────────────────────────
 
@@ -53,28 +55,27 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
       isPlaying: false,
       isLoading: false,
       hasStarted: false,
-      listenThresholdReached: false,
+      isPlaylistFinished: false,
     }),
 
   setGenerating: (v) => set({ isGenerating: v }),
 
   setError: (error) => set({ error }),
 
-  // YT-BLOCK-1: autoPlay=false по умолчанию — загрузка только после явного Play
+  // hasStarted is session-level — never reset on track navigation.
+  // autoPlay=true when playback already unlocked (e.g. ENDED → auto-next).
   nextTrack: (autoPlay = false) => {
     const { playlist, currentTrackIndex } = get();
     if (currentTrackIndex < playlist.length - 1) {
       set({
         currentTrackIndex: currentTrackIndex + 1,
-        isPlaying: autoPlay,          // будет true только при YouTube auto-next
-        isLoading: autoPlay,           // буферинг только при autoPlay
-        hasStarted: false,
-        listenThresholdReached: false,
+        isPlaying: autoPlay,
+        isLoading: autoPlay,
+        isPlaylistFinished: false,
       });
     }
   },
 
-  // YT-BLOCK-1: prev — тоже без авто-загрузки
   prevTrack: (autoPlay = false) => {
     const { currentTrackIndex } = get();
     if (currentTrackIndex > 0) {
@@ -82,8 +83,7 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
         currentTrackIndex: currentTrackIndex - 1,
         isPlaying: autoPlay,
         isLoading: autoPlay,
-        hasStarted: false,
-        listenThresholdReached: false,
+        isPlaylistFinished: false,
       });
     }
   },
@@ -96,7 +96,7 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
       isPlaying: false,
       isLoading: false,
       hasStarted: false,
-      listenThresholdReached: false,
+      isPlaylistFinished: false,
     }),
 
   // ── Playback actions ────────────────────────────────────────
@@ -105,10 +105,16 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
 
   setTrackLoading: (loading) => set({ isLoading: loading }),
 
+  /** Разблокирует autoplay — вызывается при первом user click на Play. */
   markTrackStarted: () => set({ hasStarted: true }),
 
-  // YT-BLOCK-2: YouTube onStateChange срабатывает при пороге прослушивания
-  markListenThresholdReached: () => set({ listenThresholdReached: true }),
+  /** Помечает плейлист как завершённый — последний трек доиграл до конца. */
+  markPlaylistFinished: () =>
+    set({
+      isPlaylistFinished: true,
+      isPlaying: false,
+      isLoading: false,
+    }),
 }));
 
 // ── Derived selectors ────────────────────────────────────────────
@@ -149,12 +155,12 @@ export function selectIsTrackLoading(state: PlayerState): boolean {
   return state.isLoading;
 }
 
-/** Трек был запущен хотя бы раз */
+/** Autoplay разблокирован — был хотя бы один user gesture Play. */
 export function selectHasStarted(state: PlayerState): boolean {
   return state.hasStarted;
 }
 
-/** Порог прослушивания достигнут — можно слать listen event */
-export function selectListenThresholdReached(state: PlayerState): boolean {
-  return state.listenThresholdReached;
+/** Плейлист завершён — последний трек доиграл до конца. */
+export function selectIsPlaylistFinished(state: PlayerState): boolean {
+  return state.isPlaylistFinished;
 }

@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 
 import { DashboardContent } from "@/components/DashboardContent";
 import { useSessionStore } from "@/store/sessionStore";
+import { useT } from "@/store/localeStore";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useT();
   const userId = useSessionStore((s) => s.userId);
   const [hydrated, setHydrated] = useState(false);
 
@@ -28,8 +30,8 @@ export default function DashboardPage() {
 
   if (!hydrated || !userId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-[var(--foreground-muted)]">
-        Loading…
+      <div className="flex h-dvh items-center justify-center bg-[var(--background)] text-[var(--foreground-muted)] overflow-hidden">
+        {t.dashboard.loading}
       </div>
     );
   }

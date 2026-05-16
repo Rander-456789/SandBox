@@ -5,9 +5,11 @@ import { useRef, useState } from "react";
 
 import { createGuest } from "@/lib/api";
 import { useSessionStore } from "@/store/sessionStore";
+import { useT } from "@/store/localeStore";
 
 export function GuestContinueButton() {
   const router = useRouter();
+  const t = useT();
   const setUserId = useSessionStore((s) => s.setUserId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function GuestContinueButton() {
         disabled={loading}
         className="rounded-full bg-[var(--accent)] px-10 py-3 text-sm font-medium text-white shadow-lg shadow-black/30 transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Connecting…" : "Continue as Guest"}
+        {loading ? t.landing.connecting : t.landing.continueAsGuest}
       </button>
       {error ? (
         <p className="max-w-md text-center text-sm text-red-400/90">{error}</p>

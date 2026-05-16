@@ -95,8 +95,39 @@ export async function sendInteraction(
     if (!res.ok) {
       throw new Error(`Interaction log failed: ${res.status}`);
     }
-  } catch (e) {
-    console.error("[api] sendInteraction failed:", e);
-    throw e;
+  } catch {
+    // Interactions are fire-and-forget; failures are silently ignored upstream
+    throw new Error("Interaction log failed");
+  }
+}
+
+// ── YouTube ─────────────────────────────────────────────────────
+
+export type YouTubeSearchResponse = {
+  videoId: string | null;
+};
+
+/**
+ * Поиск YouTube videoId по artist_name + track_name.
+ * Backend endpoint: GET /api/youtube/search?artist=...&track=...
+ *
+ * Используется ТОЛЬКО в runtime/playback слое.
+ * Recommender layer НЕ вызывает эту функцию.
+ */
+export async function searchYoutubeVideo(
+  artist: string,
+  track: string,
+): Promise<string | null> {
+  try {
+    const params = new URLSearchParams({ artist, track });
+    const res = await fetch(`${API}/api/youtube/search?${params}`);
+    if (!res.ok) {
+      throw new Error(`YouTube search failed: ${res.status}`);
+    }
+    const data = await parseJson<YouTubeSearchResponse>(res);
+    return data.videoId;
+  } catch {
+    // YouTube search is best-effort; return null on failure silently
+    return null;
   }
 }

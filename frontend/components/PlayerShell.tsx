@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlaylistTrack } from "@/lib/api";
+import { useT } from "@/store/localeStore";
 
 type Props = {
   currentTrack: PlaylistTrack | null;
@@ -14,6 +15,8 @@ type Props = {
   isPlaying: boolean;
   /** загрузка track runtime (YouTube buffering) */
   isTrackLoading: boolean;
+  /** плейлист завершён — последний трек доиграл */
+  isPlaylistFinished?: boolean;
   onDislike?: () => void;
   onPrevious?: () => void;
   onPlayPause?: () => void;
@@ -116,24 +119,31 @@ export function PlayerShell({
   nextDisabled,
   isPlaying,
   isTrackLoading,
+  isPlaylistFinished = false,
   onDislike,
   onPrevious,
   onPlayPause,
   onNext,
   onLike,
 }: Props) {
+  const t = useT();
+
   const btn =
     "flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground-muted)] shadow-md shadow-black/25 transition hover:border-[var(--accent-muted)] hover:text-[var(--accent)] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[var(--border)] disabled:hover:text-[var(--foreground-muted)] disabled:active:scale-100";
 
-  // YT-BLOCK-3: during buffering, block all navigation (not just play/pause)
-  const navDisabled = isTrackLoading;
+  // During buffering or when playlist is finished, block all navigation
+  const navDisabled = isTrackLoading || isPlaylistFinished;
 
   return (
-    <div className="pointer-events-auto fixed inset-x-0 bottom-0 z-50 border-t border-[var(--border)] bg-[var(--surface)]/95 px-4 py-4 backdrop-blur-md">
+    <div className="sticky bottom-0 z-20 shrink-0 border-t border-[var(--border)] bg-[var(--surface)]/95 px-4 py-4 backdrop-blur-md">
       <div className="mx-auto flex max-w-4xl flex-col gap-3">
         {/* Track info */}
         <div className="text-center">
-          {currentTrack ? (
+          {isPlaylistFinished ? (
+            <p className="text-sm text-[var(--accent)]/80 font-medium">
+              {t.player.finished}
+            </p>
+          ) : currentTrack ? (
             <>
               <p className="text-base font-semibold leading-tight text-[var(--foreground)]">
                 {currentTrack.track_name}
@@ -146,25 +156,31 @@ export function PlayerShell({
             <div className="flex flex-col items-center gap-2 py-3">
               <IconMusic />
               <p className="text-sm text-[var(--foreground-muted)]">
-                Your playlist is empty
+                {t.player.emptyState}
               </p>
               <p className="text-xs text-[var(--foreground-muted)]/60">
-                Generate a playlist to start listening
+                {t.player.emptyHint}
               </p>
             </div>
           ) : (
             <p className="text-sm text-[var(--foreground-muted)] italic">
-              Loading…
+              {t.player.loading}
             </p>
           )}
         </div>
 
-        {/* N1: Progress bar — static placeholder with meaningful state */}
+        {/* Progress bar — subtle loading/playback indicator */}
         <div className="h-1.5 rounded-full bg-[var(--surface-elevated)] shadow-inner shadow-black/40">
           <div
             className={
               "h-full rounded-full bg-gradient-to-r from-[var(--accent-muted)] to-[var(--accent)] opacity-70 transition-all duration-500" +
-              (isEmpty ? " w-0" : isTrackLoading ? " w-1/5 animate-pulse" : " w-0")
+              (isEmpty || isPlaylistFinished
+                ? " w-0"
+                : isTrackLoading
+                  ? " w-1/5 animate-pulse"
+                  : isPlaying
+                    ? " w-3/5"
+                    : " w-0")
             }
           />
         </div>
@@ -175,7 +191,7 @@ export function PlayerShell({
           <button
             type="button"
             className={btn}
-            aria-label="Dislike"
+            aria-label={t.player.dislike}
             onClick={onDislike}
             disabled={!currentTrack || navDisabled}
           >
@@ -186,7 +202,7 @@ export function PlayerShell({
           <button
             type="button"
             className={btn}
-            aria-label="Previous track"
+            aria-label={t.player.previousTrack}
             onClick={onPrevious}
             disabled={prevDisabled || navDisabled}
           >
@@ -197,9 +213,9 @@ export function PlayerShell({
           <button
             type="button"
             className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-lg shadow-black/40 transition hover:bg-[var(--accent-hover)] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[var(--accent)] disabled:active:scale-100"
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={isPlaying ? t.player.pause : t.player.play}
             onClick={onPlayPause}
-            disabled={!currentTrack || isTrackLoading}
+            disabled={!currentTrack || isTrackLoading || isPlaylistFinished}
           >
             {isTrackLoading ? (
               <svg
@@ -231,7 +247,7 @@ export function PlayerShell({
           <button
             type="button"
             className={btn}
-            aria-label="Next track"
+            aria-label={t.player.nextTrack}
             onClick={onNext}
             disabled={nextDisabled || navDisabled}
           >
@@ -242,7 +258,7 @@ export function PlayerShell({
           <button
             type="button"
             className={btn}
-            aria-label="Like"
+            aria-label={t.player.like}
             onClick={onLike}
             disabled={!currentTrack || navDisabled}
           >

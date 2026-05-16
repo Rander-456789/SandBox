@@ -1,8 +1,9 @@
-import { GuestContinueButton } from "@/components/GuestContinueButton";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { LandingContent } from "@/components/LandingContent";
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden">
+    <div className="relative flex h-dvh flex-col overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
@@ -11,23 +12,13 @@ export default function Home() {
         }}
       />
 
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-24">
-        <div className="max-w-xl text-center">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.25em] text-[var(--foreground-muted)]">
-            MVP sandbox
-          </p>
-          <h1 className="bg-gradient-to-br from-[var(--foreground)] to-[var(--foreground-muted)] bg-clip-text text-4xl font-semibold tracking-tight text-transparent sm:text-5xl">
-            RecSys Music Sandbox
-          </h1>
-          <p className="mt-6 text-lg leading-relaxed text-[var(--foreground-muted)]">
-            Explore recommendation flows with a guest session, playlist generation, and a player
-            shell — tuned for quick experiments, not enterprise dashboards.
-          </p>
-        </div>
+      {/* Language selector — top-right, minimal */}
+      <div className="relative z-10 flex justify-end px-6 pt-5">
+        <LanguageSelector />
+      </div>
 
-        <div className="mt-14">
-          <GuestContinueButton />
-        </div>
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-12">
+        <LandingContent />
       </main>
     </div>
   );

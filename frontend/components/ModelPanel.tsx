@@ -1,18 +1,21 @@
 "use client";
 
 import { useSessionStore } from "@/store/sessionStore";
-
-// PRE-YT-3: ModelPanel reads activeModel from sessionStore
-const MODEL_REGISTRY: Record<string, string> = {
-  random: "Random Model",
-};
+import { useT } from "@/store/localeStore";
 
 export function ModelPanel() {
+  const t = useT();
   const activeModel = useSessionStore((s) => s.activeModel);
+
+  // PRE-YT-3: ModelPanel reads activeModel from sessionStore
+  const MODEL_REGISTRY: Record<string, string> = {
+    random: t.model.randomModel,
+  };
+
   const modelLabel = MODEL_REGISTRY[activeModel] ?? activeModel;
 
   return (
-    <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-inner shadow-black/20">
+    <div className="shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-inner shadow-black/20">
       <div className="mx-auto flex max-w-4xl items-end gap-1">
         <div
           role="tab"
