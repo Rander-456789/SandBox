@@ -60,22 +60,22 @@ export const usePlayerStore = create<PlayerState>()((set, get) => ({
 
   setError: (error) => set({ error }),
 
-  // YT-BLOCK-1: autoPlay parameter — default true for YouTube auto-continue
-  nextTrack: (autoPlay = true) => {
+  // YT-BLOCK-1: autoPlay=false по умолчанию — загрузка только после явного Play
+  nextTrack: (autoPlay = false) => {
     const { playlist, currentTrackIndex } = get();
     if (currentTrackIndex < playlist.length - 1) {
       set({
         currentTrackIndex: currentTrackIndex + 1,
-        isPlaying: autoPlay,          // YouTube будет играть
-        isLoading: autoPlay,           // начнётся буферинг
+        isPlaying: autoPlay,          // будет true только при YouTube auto-next
+        isLoading: autoPlay,           // буферинг только при autoPlay
         hasStarted: false,
         listenThresholdReached: false,
       });
     }
   },
 
-  // YT-BLOCK-1: autoPlay parameter for prev navigation too
-  prevTrack: (autoPlay = true) => {
+  // YT-BLOCK-1: prev — тоже без авто-загрузки
+  prevTrack: (autoPlay = false) => {
     const { currentTrackIndex } = get();
     if (currentTrackIndex > 0) {
       set({

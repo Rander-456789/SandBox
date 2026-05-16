@@ -82,20 +82,15 @@ export function DashboardContent({ userId }: Props) {
     nextTrack();
   }, [userId, currentTrack, activeModel, nextTrack]);
 
-  /** LIKE: логирует like и авто-переходит к следующему треку */
-  // C6: на последнем треке — только лог, без навигации
+  /** LIKE: логирует like, НЕ переключает трек */
   const handleLike = useCallback(() => {
     if (!currentTrack) return;
     sendInteraction(userId, currentTrack.id, activeModel, "like").catch(() => {
       /* silently ignore */
     });
-    if (!isAtEnd) {
-      nextTrack();
-    }
-  }, [userId, currentTrack, activeModel, isAtEnd, nextTrack]);
+  }, [userId, currentTrack, activeModel]);
 
-  /** DISLIKE: логирует dislike и авто-переходит к следующему треку */
-  // C6: на последнем треке — только лог, без навигации
+  /** DISLIKE: логирует dislike, НЕ переключает трек */
   const handleDislike = useCallback(() => {
     if (!currentTrack) return;
     sendInteraction(
@@ -106,10 +101,7 @@ export function DashboardContent({ userId }: Props) {
     ).catch(() => {
       /* silently ignore */
     });
-    if (!isAtEnd) {
-      nextTrack();
-    }
-  }, [userId, currentTrack, activeModel, isAtEnd, nextTrack]);
+  }, [userId, currentTrack, activeModel]);
 
   /** PLAY/PAUSE: toggle isPlaying; markTrackStarted на первом play */
   const handlePlayPause = useCallback(() => {
