@@ -4,6 +4,11 @@ export type GuestAuthResponse = {
   user_id: string;
 };
 
+export type UserItem = {
+  id: string;
+  username: string;
+};
+
 export type PlaylistTrack = {
   id: string;
   artist_name: string;
@@ -42,6 +47,25 @@ export async function createGuest(): Promise<GuestAuthResponse> {
     return parseJson<GuestAuthResponse>(res);
   } catch (e) {
     console.error("[api] createGuest failed:", e);
+    throw e;
+  }
+}
+
+// ── Users ───────────────────────────────────────────────────────
+
+/**
+ * Получает список ВСЕХ существующих пользователей из таблицы users.
+ * Никаких mock-данных — только реальные записи из БД.
+ */
+export async function fetchUsers(): Promise<UserItem[]> {
+  try {
+    const res = await fetch(`${API}/api/users/`);
+    if (!res.ok) {
+      throw new Error(`Fetch users failed: ${res.status}`);
+    }
+    return parseJson<UserItem[]>(res);
+  } catch (e) {
+    console.error("[api] fetchUsers failed:", e);
     throw e;
   }
 }

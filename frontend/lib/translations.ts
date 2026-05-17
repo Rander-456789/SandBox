@@ -9,6 +9,10 @@ export interface TranslationDict {
     badge: string;
     title: string;
     subtitle: string;
+    selectUser: string;
+    existingUsers: string;
+    noUsersFound: string;
+    loadingUsers: string;
     continueAsGuest: string;
     connecting: string;
     language: string;
@@ -49,6 +53,10 @@ export const translations: Record<Locale, TranslationDict> = {
       title: "RecSys Music Sandbox",
       subtitle:
         "Explore recommendation flows with a guest session, playlist generation, and a player shell — tuned for quick experiments, not enterprise dashboards.",
+      selectUser: "Select User",
+      existingUsers: "Existing Users",
+      noUsersFound: "No existing users found",
+      loadingUsers: "Loading users…",
       continueAsGuest: "Continue as Guest",
       connecting: "Connecting…",
       language: "Language",
@@ -91,6 +99,10 @@ export const translations: Record<Locale, TranslationDict> = {
       title: "RecSys Music Sandbox",
       subtitle:
         "Исследуйте рекомендательные алгоритмы через гостевую сессию, генерацию плейлистов и плеер — заточено под быстрые эксперименты, а не enterprise-панели.",
+      selectUser: "Выбрать пользователя",
+      existingUsers: "Существующие пользователи",
+      noUsersFound: "Пользователи не найдены",
+      loadingUsers: "Загрузка пользователей…",
       continueAsGuest: "Продолжить как гость",
       connecting: "Подключение…",
       language: "Язык",

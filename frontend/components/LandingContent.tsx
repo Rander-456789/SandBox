@@ -1,6 +1,7 @@
 "use client";
 
 import { GuestContinueButton } from "@/components/GuestContinueButton";
+import { UserSelector } from "@/components/UserSelector";
 import { useT } from "@/store/localeStore";
 
 export function LandingContent() {
@@ -18,7 +19,22 @@ export function LandingContent() {
         {t.landing.subtitle}
       </p>
 
-      <div className="mt-14">
+      {/* ── Existing User Selection ──────────────────────────── */}
+      <div className="mt-12">
+        <UserSelector />
+      </div>
+
+      {/* ── Divider ──────────────────────────────────────────── */}
+      <div className="mt-8 flex items-center gap-4">
+        <div className="h-px flex-1 bg-[var(--border)]" />
+        <span className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--foreground-muted)]">
+          or
+        </span>
+        <div className="h-px flex-1 bg-[var(--border)]" />
+      </div>
+
+      {/* ── Guest Continue ───────────────────────────────────── */}
+      <div className="mt-8">
         <GuestContinueButton />
       </div>
     </div>

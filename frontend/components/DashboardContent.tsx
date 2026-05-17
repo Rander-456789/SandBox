@@ -161,13 +161,11 @@ export function DashboardContent({ userId }: Props) {
     const unlocked = usePlayerStore.getState().hasStarted;
     if (unlocked) {
       runtimeRef.current.loadAndPlay(currentVideoId);
-      setTrackLoading(true);
       setPlaying(true);
     } else {
       runtimeRef.current.cue(currentVideoId);
-      setTrackLoading(true);
     }
-  }, [currentVideoId, currentTrack, setTrackLoading, setPlaying]);
+  }, [currentVideoId, currentTrack, setPlaying]);
 
   // ── Double-click guard for Generate ─────────────────────────
   const isGeneratingRef = useRef(false);
